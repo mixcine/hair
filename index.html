@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineFlux - Premium UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --bg-dark: #09090b;
+            --accent: #6366f1;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-dark);
+            color: #ffffff;
+            overflow-x: hidden;
+            margin: 0;
+        }
+
+        .hero-gradient {
+            background: linear-gradient(to top, var(--bg-dark) 10%, rgba(9, 9, 11, 0.4) 50%, transparent 100%);
+        }
+
+        .genre-item {
+            min-width: 85px; max-width: 85px; height: 60px;
+            transition: all 0.3s ease;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-radius: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .genre-item.active {
+            background: var(--accent); border-color: var(--accent);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .glass-nav {
+            background: rgba(9, 9, 11, 0.85);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .movie-card-img { aspect-ratio: 2/3; object-fit: cover; border-radius: 16px; }
+
+        .skeleton {
+            background: linear-gradient(90deg, #18181b 25%, #27272a 50%, #18181b 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+        }
+
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Animações de transição de tela */
+        .page-transition {
+            animation: slideUp 0.4s ease-out forwards;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .details-backdrop {
+            mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+        }
+    </style>
+</head>
+<body class="pb-24">
+
+    <!-- TELA HOME -->
+    <main id="homePage" class="block">
+        <header class="px-6 py-6 flex justify-between items-center fixed top-0 w-full z-40 glass-nav">
+            <div>
+                <p class="text-slate-400 text-xs font-medium uppercase tracking-widest text-[10px]">CineFlux Premium</p>
+                <h1 class="text-xl font-bold">Início</h1>
+            </div>
+            <div class="flex gap-4">
+                <div class="relative hidden sm:block">
+                    <input id="searchInput" type="text" placeholder="Pesquisar..." class="bg-white/5 border border-white/10 rounded-full py-1.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 w-48 transition-all focus:w-64">
+                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                </div>
+                <button class="p-2 bg-white/5 rounded-full"><i data-lucide="bell" class="w-5 h-5"></i></button>
+            </div>
+        </header>
+
+        <!-- Hero Home -->
+        <section id="heroSection" class="relative h-[500px] w-full pt-20 overflow-hidden bg-zinc-900">
+            <div id="heroContent" class="h-full w-full relative">
+                <div class="w-full h-full skeleton"></div>
+            </div>
+        </section>
+
+        <!-- Gêneros RecyclerView -->
+        <section class="px-6 mt-8">
+            <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Explorar Gêneros</h3>
+            <div id="genreContainer" class="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+                 <button onclick="changeGenre(null, this)" class="genre-item active">
+                    <i data-lucide="layout-grid" class="w-5 h-5 mb-1"></i>
+                    <span class="text-[10px] font-bold">Tudo</span>
+                 </button>
+                 <button onclick="changeGenre(28, this)" class="genre-item"><i data-lucide="swords" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold">Ação</span></button>
+                 <button onclick="changeGenre(35, this)" class="genre-item"><i data-lucide="laugh" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold">Comédia</span></button>
+                 <button onclick="changeGenre(27, this)" class="genre-item"><i data-lucide="ghost" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold">Terror</span></button>
+                 <button onclick="changeGenre(10749, this)" class="genre-item"><i data-lucide="heart" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold">Romance</span></button>
+                 <button onclick="changeGenre(878, this)" class="genre-item"><i data-lucide="rocket" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold">Ficção</span></button>
+                 <button onclick="changeGenre(16, this)" class="genre-item"><i data-lucide="palette" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold">Animação</span></button>
+            </div>
+        </section>
+
+        <!-- Grade de Filmes -->
+        <section class="px-6 mt-8">
+            <div class="flex justify-between items-end mb-6">
+                <h3 id="gridTitle" class="text-xl font-bold">Populares Agora</h3>
+            </div>
+            <div id="contentGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6"></div>
+        </section>
+    </main>
+
+    <!-- TELA DE DETALHES -->
+    <main id="detailsPage" class="hidden min-h-screen bg-zinc-950 pb-10">
+        <div class="relative w-full h-[60vh]">
+            <button onclick="goHome()" class="absolute top-8 left-6 z-50 p-3 bg-black/40 backdrop-blur-xl rounded-full border border-white/10 hover:bg-black/60 transition-all">
+                <i data-lucide="chevron-left" class="w-6 h-6"></i>
+            </button>
+            <img id="detailBackdrop" src="" class="w-full h-full object-cover details-backdrop" alt="Backdrop">
+            <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent"></div>
+        </div>
+
+        <div class="px-6 -mt-32 relative z-10 page-transition">
+            <div class="flex flex-col md:flex-row gap-8 items-start">
+                <!-- Poster em Destaque -->
+                <div class="w-40 md:w-64 shrink-0 shadow-2xl rounded-2xl overflow-hidden border-2 border-white/10">
+                    <img id="detailPoster" src="" class="w-full h-auto" alt="Poster">
+                </div>
+
+                <div class="flex-1">
+                    <div class="flex flex-wrap items-center gap-3 mb-4">
+                        <span class="px-3 py-1 bg-indigo-600 rounded-full text-[10px] font-bold uppercase" id="detailType">Filme</span>
+                        <div class="flex items-center gap-1 text-yellow-400">
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <span class="font-bold text-white" id="detailRating">8.5</span>
+                        </div>
+                        <span class="text-slate-400 text-sm" id="detailYear">2024</span>
+                    </div>
+
+                    <h1 id="detailTitle" class="text-4xl md:text-6xl font-black mb-6 leading-tight">Título do Filme</h1>
+                    
+                    <div class="flex gap-4 mb-8">
+                        <button class="bg-white text-black px-10 py-4 rounded-full font-bold flex items-center gap-3 hover:scale-105 transition-transform">
+                            <i data-lucide="play" class="w-5 h-5 fill-current"></i> Assistir Agora
+                        </button>
+                        <button class="p-4 bg-white/10 rounded-full border border-white/20 hover:bg-white/20">
+                            <i data-lucide="plus" class="w-6 h-6"></i>
+                        </button>
+                        <button class="p-4 bg-white/10 rounded-full border border-white/20 hover:bg-white/20">
+                            <i data-lucide="heart" class="w-6 h-6"></i>
+                        </button>
+                    </div>
+
+                    <div class="mb-8">
+                        <h4 class="text-indigo-400 font-bold uppercase text-xs tracking-widest mb-2">Sinopse</h4>
+                        <p id="detailOverview" class="text-slate-300 leading-relaxed text-lg max-w-3xl">Carregando descrição...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recomendados na Tela de Detalhes -->
+            <section class="mt-16">
+                <h3 class="text-xl font-bold mb-6">Filmes Recomendados</h3>
+                <div id="similarGrid" class="flex gap-6 overflow-x-auto no-scrollbar pb-6">
+                    <!-- Cards similares -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Bottom Nav -->
+    <nav class="fixed bottom-0 left-0 right-0 h-20 glass-nav z-50 px-8 flex justify-between items-center">
+        <button onclick="goHome()" class="flex flex-col items-center gap-1 text-indigo-500">
+            <i data-lucide="home" class="w-6 h-6"></i>
+            <span class="text-[10px] font-bold">Início</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 text-slate-500 hover:text-white"><i data-lucide="compass" class="w-6 h-6"></i><span class="text-[10px] font-bold">Explorar</span></button>
+        <button class="flex flex-col items-center gap-1 text-slate-500 hover:text-white"><i data-lucide="heart" class="w-6 h-6"></i><span class="text-[10px] font-bold">Favoritos</span></button>
+        <button class="flex flex-col items-center gap-1 text-slate-500 hover:text-white"><i data-lucide="user" class="w-6 h-6"></i><span class="text-[10px] font-bold">Perfil</span></button>
+    </nav>
+
+    <script>
+        const API_KEY = '741fd22ccd6cebe13c498c8efc5c1576';
+        const BASE_URL = 'https://api.themoviedb.org/3';
+        const IMG_URL = 'https://image.tmdb.org/t/p/w500';
+        const BACKDROP_URL = 'https://image.tmdb.org/t/p/original';
+
+        async function apiCall(endpoint) {
+            const res = await fetch(`${BASE_URL}${endpoint}${endpoint.includes('?') ? '&' : '?'}api_key=${API_KEY}&language=pt-BR`);
+            const data = await res.json();
+            return data;
+        }
+
+        async function initApp() {
+            const trend = await apiCall('/trending/all/week');
+            if (trend.results.length) setupHero(trend.results[0]);
+            loadGrid('/discover/movie?sort_by=popularity.desc');
+        }
+
+        function setupHero(item) {
+            const container = document.getElementById('heroContent');
+            const bg = item.backdrop_path ? BACKDROP_URL + item.backdrop_path : '';
+            container.innerHTML = `
+                <img src="${bg}" class="w-full h-full object-cover animate-in fade-in duration-1000">
+                <div class="absolute inset-0 hero-gradient"></div>
+                <div class="absolute bottom-10 px-6 w-full max-w-2xl">
+                    <h2 class="text-4xl font-black mb-4 drop-shadow-lg">${item.title || item.name}</h2>
+                    <button onclick="openDetails('${item.media_type || 'movie'}', ${item.id})" class="bg-white text-black px-8 py-3 rounded-full font-bold flex items-center gap-2 hover:scale-105 transition-transform">
+                        <i data-lucide="play" class="w-4 h-4 fill-current"></i> Ver agora
+                    </button>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        async function loadGrid(endpoint) {
+            const grid = document.getElementById('contentGrid');
+            grid.innerHTML = Array(6).fill(`<div class="w-full h-64 skeleton rounded-2xl"></div>`).join('');
+            const data = await apiCall(endpoint);
+            
+            grid.innerHTML = data.results.map(item => `
+                <div class="group cursor-pointer animate-in zoom-in duration-300" onclick="openDetails('${item.media_type || 'movie'}', ${item.id})">
+                    <div class="overflow-hidden rounded-2xl bg-zinc-800 shadow-lg">
+                        <img src="${item.poster_path ? IMG_URL + item.poster_path : ''}" class="movie-card-img w-full transition-transform group-hover:scale-110">
+                    </div>
+                    <div class="mt-3">
+                        <h4 class="font-bold text-sm truncate">${item.title || item.name}</h4>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase">${(item.release_date || item.first_air_date || '').split('-')[0]}</p>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        async function openDetails(type, id) {
+            window.scrollTo(0, 0);
+            document.getElementById('homePage').classList.add('hidden');
+            document.getElementById('detailsPage').classList.remove('hidden');
+
+            const item = await apiCall(`/${type}/${id}`);
+            
+            document.getElementById('detailBackdrop').src = BACKDROP_URL + item.backdrop_path;
+            document.getElementById('detailPoster').src = IMG_URL + item.poster_path;
+            document.getElementById('detailTitle').innerText = item.title || item.name;
+            document.getElementById('detailRating').innerText = item.vote_average.toFixed(1);
+            document.getElementById('detailYear').innerText = (item.release_date || item.first_air_date || '').split('-')[0];
+            document.getElementById('detailOverview').innerText = item.overview || "Sem sinopse disponível.";
+            document.getElementById('detailType').innerText = type === 'movie' ? 'Filme' : 'Série';
+
+            // Carregar Recomendados
+            const similar = await apiCall(`/${type}/${id}/similar`);
+            const similarGrid = document.getElementById('similarGrid');
+            similarGrid.innerHTML = similar.results.slice(0, 10).map(s => `
+                <div class="min-w-[140px] max-w-[140px] cursor-pointer" onclick="openDetails('${type}', ${s.id})">
+                    <img src="${IMG_URL + s.poster_path}" class="w-full h-52 object-cover rounded-xl shadow-lg border border-white/5">
+                    <h5 class="text-[11px] font-bold mt-2 truncate">${s.title || s.name}</h5>
+                </div>
+            `).join('');
+            
+            lucide.createIcons();
+        }
+
+        function goHome() {
+            document.getElementById('detailsPage').classList.add('hidden');
+            document.getElementById('homePage').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function changeGenre(id, btn) {
+            document.querySelectorAll('.genre-item').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            loadGrid(id ? `/discover/movie?with_genres=${id}` : '/discover/movie?sort_by=popularity.desc');
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
