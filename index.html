@@ -1,203 +1,451 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StreamVibe - TMDB Edition</title>
+    <title>MIXCINE - Seu Streaming Favorito</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            background-color: #0f172a;
-            color: #f8fafc;
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
+        
+        :root {
+            --netflix-black: #141414;
+            --mixcine-blue: #2563eb;
+            --mixcine-cyan: #22d3ee;
         }
-        .movie-card:hover .overlay {
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--netflix-black);
+            color: #fff;
+            margin: 0;
+            overflow-x: hidden;
+            padding-bottom: 70px; /* Espaço para a NavigationBar móvel */
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, var(--mixcine-blue), var(--mixcine-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-scrolled {
+            background-color: var(--netflix-black) !important;
+        }
+
+        /* Estilo das Fileiras Netflix */
+        .content-row {
+            display: flex;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-behavior: smooth;
+            gap: 0.5rem;
+            padding: 1rem 0 2rem 0;
+            scrollbar-width: none; 
+        }
+
+        .content-row::-webkit-scrollbar {
+            display: none; 
+        }
+
+        .movie-card {
+            flex: 0 0 auto;
+            width: 140px;
+            transition: transform 0.4s ease;
+            position: relative;
+        }
+        
+        @media (min-width: 768px) {
+            .movie-card { width: 220px; }
+        }
+
+        .movie-card:hover {
+            transform: scale(1.15);
+            z-index: 50;
+        }
+
+        .movie-card:hover .card-info {
             opacity: 1;
         }
-        .custom-scrollbar::-webkit-scrollbar {
-            height: 6px;
+
+        .card-info {
+            opacity: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 60%, transparent 100%);
+            transition: opacity 0.3s ease;
+            pointer-events: none;
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #1e293b;
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #141414; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--mixcine-blue); }
+
+        #hero-banner {
+            height: 70vh;
+            background-size: cover;
+            background-position: center 20%;
+            position: relative;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 10px;
+
+        @media (min-width: 768px) {
+            #hero-banner { height: 85vh; }
         }
-        #hero-section {
-            transition: background-image 0.8s ease-in-out;
+
+        #hero-banner::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40%;
+            background: linear-gradient(to top, var(--netflix-black), transparent);
         }
-        .skeleton {
-            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
+
+        .row-container {
+            position: relative;
+            margin-bottom: 2rem;
         }
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+
+        .scroll-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 40;
+            background: rgba(0,0,0,0.5);
+            height: 100%;
+            width: 40px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            cursor: pointer;
+        }
+
+        @media (min-width: 1024px) {
+            .row-container:hover .scroll-btn { display: flex; opacity: 1; }
+        }
+
+        .scroll-btn:hover { background: rgba(0,0,0,0.8); font-size: 1.2rem; }
+        .btn-left { left: 0; border-radius: 0 4px 4px 0; }
+        .btn-right { right: 0; border-radius: 4px 0 0 4px; }
+
+        /* Navigation Bar Inferior */
+        .bottom-nav {
+            background: rgba(18, 18, 18, 0.95);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .nav-item.active {
+            color: #2563eb;
         }
     </style>
 </head>
-<body class="font-sans antialiased">
+<body class="custom-scrollbar">
+    <!-- Navbar Superior (Desktop) -->
+    <nav id="navbar" class="fixed top-0 w-full z-[100] transition-colors duration-500 px-6 md:px-12 py-4 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent">
+        <div class="flex items-center gap-8">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.reload()">
+                <span class="text-2xl md:text-3xl font-black tracking-tighter gradient-text uppercase">MIXCINE</span>
+            </div>
+            
+            <div class="hidden lg:flex items-center gap-5 text-sm font-medium text-slate-200">
+                <button onclick="changeType('movie')" class="hover:text-white transition-colors">Filmes</button>
+                <button onclick="changeType('tv')" class="hover:text-white transition-colors">Séries</button>
+                <a href="#" class="hover:text-white transition-colors">Populares</a>
+                <a href="#" class="hover:text-white transition-colors">Minha Lista</a>
+            </div>
+        </div>
 
-    <!-- Navegação Mobile -->
-    <nav class="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 flex justify-around p-4 md:hidden">
-        <button class="text-blue-500"><i class="fas fa-home text-xl"></i></button>
-        <button class="text-slate-400"><i class="fas fa-fire text-xl"></i></button>
-        <button class="text-slate-400"><i class="fas fa-plus text-xl"></i></button>
-        <button class="text-slate-400"><i class="fas fa-user text-xl"></i></button>
+        <div class="flex items-center gap-6">
+            <div class="relative group hidden md:block">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-400"></i>
+                <input type="text" id="search-input" placeholder="Títulos..." 
+                    class="bg-black/40 border border-slate-700 rounded-sm py-1.5 pl-10 pr-4 focus:outline-none focus:ring-1 focus:ring-blue-500 w-40 focus:w-64 transition-all duration-300 text-sm">
+            </div>
+            
+            <div onclick="openProfileModal()" class="flex items-center gap-2 cursor-pointer group">
+                <span id="nav-profile-name" class="text-sm font-medium hidden sm:block group-hover:text-blue-400">Visitante</span>
+                <img id="nav-profile-img" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Felix" alt="Avatar" class="w-8 h-8 rounded bg-blue-600 object-cover border border-transparent group-hover:border-blue-400 transition-all">
+            </div>
+        </div>
     </nav>
 
-    <!-- Header Desktop -->
-    <header class="hidden md:flex fixed top-0 w-full z-50 bg-gradient-to-b from-slate-900 to-transparent p-6 items-center justify-between">
-        <div class="flex items-center gap-10">
-            <h1 class="text-2xl font-bold text-blue-500 tracking-tighter">STREAMVIBE</h1>
-            <nav class="flex gap-6 text-sm font-medium">
-                <a href="#" class="text-white hover:text-blue-400 transition">Início</a>
-                <a href="#" class="text-slate-400 hover:text-blue-400 transition">Filmes</a>
-                <a href="#" class="text-slate-400 hover:text-blue-400 transition">Séries</a>
-                <a href="#" class="text-slate-400 hover:text-blue-400 transition">Minha Lista</a>
-            </nav>
-        </div>
-        <div class="flex items-center gap-6">
-            <div class="relative group">
-                <input type="text" placeholder="Buscar..." class="bg-slate-800/50 border border-slate-700 rounded-full px-4 py-1 text-sm focus:outline-none focus:border-blue-500 w-64">
-                <i class="fas fa-search absolute right-3 top-2 text-slate-500"></i>
+    <!-- Navigation Bar Inferior (Mobile/Tablet) -->
+    <div class="bottom-nav fixed bottom-0 left-0 right-0 h-16 z-[150] flex lg:hidden items-center justify-around px-2">
+        <button onclick="changeType('movie')" class="nav-item flex flex-col items-center gap-1 text-slate-400 active" id="btn-movies">
+            <i class="fas fa-film text-xl"></i>
+            <span class="text-[10px] font-bold uppercase">Filmes</span>
+        </button>
+        <button onclick="changeType('tv')" class="nav-item flex flex-col items-center gap-1 text-slate-400" id="btn-series">
+            <i class="fas fa-tv text-xl"></i>
+            <span class="text-[10px] font-bold uppercase">Séries</span>
+        </button>
+        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="nav-item flex flex-col items-center gap-1 text-slate-400">
+            <i class="fas fa-home text-xl"></i>
+            <span class="text-[10px] font-bold uppercase">Início</span>
+        </button>
+        <button onclick="openProfileModal()" class="nav-item flex flex-col items-center gap-1 text-slate-400">
+            <i class="fas fa-user text-xl"></i>
+            <span class="text-[10px] font-bold uppercase">Perfil</span>
+        </button>
+    </div>
+
+    <!-- Hero Section -->
+    <section id="hero-banner" class="flex items-center px-6 md:px-12">
+        <div class="relative z-10 max-w-2xl mt-20">
+            <div class="flex items-center gap-2 mb-3">
+                <i class="fas fa-bolt text-blue-500 animate-pulse"></i>
+                <span class="uppercase tracking-[0.3em] text-[10px] md:text-xs font-bold text-slate-300">Destaque MIXCINE</span>
             </div>
-            <button class="text-slate-300 hover:text-white"><i class="fas fa-bell"></i></button>
-            <div class="w-8 h-8 rounded bg-blue-600 flex items-center justify-center font-bold text-xs uppercase cursor-pointer">U</div>
+            <h2 id="hero-title" class="text-3xl md:text-7xl font-black mb-4 leading-tight">Carregando...</h2>
+            <p id="hero-desc" class="text-sm md:text-lg text-slate-300 mb-8 line-clamp-3">
+                Explore o melhor conteúdo agora no MIXCINE.
+            </p>
+            <div class="flex gap-4">
+                <button class="bg-white text-black px-5 md:px-8 py-2 md:py-3 rounded font-bold flex items-center gap-3 hover:bg-white/90 transition-all transform active:scale-95 text-sm md:text-base">
+                    <i class="fas fa-play"></i> Assistir
+                </button>
+                <button class="bg-gray-500/50 text-white px-5 md:px-8 py-2 md:py-3 rounded font-bold flex items-center gap-3 hover:bg-gray-500/70 transition-all backdrop-blur-md transform active:scale-95 text-sm md:text-base">
+                    <i class="fas fa-info-circle text-lg md:text-xl"></i> Informações
+                </button>
+            </div>
         </div>
-    </header>
+    </section>
 
-    <main class="pb-24 md:pb-0">
-        <!-- Hero Section Dinâmica -->
-        <section id="hero-section" class="relative h-[70vh] md:h-[90vh] w-full flex items-end p-6 md:p-16 bg-cover bg-center">
-            <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
-            <div class="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-transparent to-transparent"></div>
-
-            <div id="hero-content" class="relative z-10 max-w-3xl opacity-0 transition-opacity duration-1000">
-                <span class="bg-blue-600 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest mb-4 inline-block">Destaque de Hoje</span>
-                <h2 id="hero-title" class="text-4xl md:text-7xl font-black mb-4 leading-tight"></h2>
-                <p id="hero-overview" class="text-slate-300 text-sm md:text-lg mb-8 line-clamp-3 md:line-clamp-4 max-w-2xl"></p>
-                <div class="flex flex-wrap gap-4">
-                    <button class="bg-white text-slate-900 px-8 py-3 rounded-md font-bold flex items-center gap-2 hover:bg-slate-200 transition">
-                        <i class="fas fa-play"></i> Assistir Agora
-                    </button>
-                    <button class="bg-slate-800/80 text-white px-8 py-3 rounded-md font-bold flex items-center gap-2 backdrop-blur hover:bg-slate-700 transition">
-                        <i class="fas fa-plus"></i> Minha Lista
-                    </button>
-                </div>
+    <!-- Content Sections -->
+    <main class="pb-20 relative z-20 space-y-8 -mt-20">
+        
+        <!-- Fileira: Populares -->
+        <section class="row-container px-6 md:px-12">
+            <h3 class="text-lg md:text-2xl font-bold mb-2">Populares agora</h3>
+            <div class="relative">
+                <div class="scroll-btn btn-left" onclick="scrollRow('row-popular', -1)"><i class="fas fa-chevron-left"></i></div>
+                <div id="row-popular" class="content-row"></div>
+                <div class="scroll-btn btn-right" onclick="scrollRow('row-popular', 1)"><i class="fas fa-chevron-right"></i></div>
             </div>
         </section>
 
-        <!-- Listas de Filmes -->
-        <div class="space-y-12 mt-[-60px] relative z-20 px-6 md:px-16 pb-12">
-            
-            <!-- Tendências (Horizontal) -->
-            <section>
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-bold tracking-tight">Tendências da Semana</h3>
-                    <div class="flex gap-2">
-                        <button class="p-2 bg-slate-800 rounded-full text-xs hover:bg-slate-700"><i class="fas fa-chevron-left"></i></button>
-                        <button class="p-2 bg-slate-800 rounded-full text-xs hover:bg-slate-700"><i class="fas fa-chevron-right"></i></button>
-                    </div>
-                </div>
-                <div id="trending-row" class="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
-                    <!-- Skeletons enquanto carrega -->
-                    <div class="flex-none w-48 h-72 skeleton rounded-xl"></div>
-                    <div class="flex-none w-48 h-72 skeleton rounded-xl"></div>
-                    <div class="flex-none w-48 h-72 skeleton rounded-xl"></div>
-                    <div class="flex-none w-48 h-72 skeleton rounded-xl"></div>
-                    <div class="flex-none w-48 h-72 skeleton rounded-xl"></div>
-                </div>
-            </section>
+        <!-- Fileira: Em Alta -->
+        <section class="row-container px-6 md:px-12">
+            <h3 class="text-lg md:text-2xl font-bold mb-2">Em Alta</h3>
+            <div class="relative">
+                <div class="scroll-btn btn-left" onclick="scrollRow('row-trending', -1)"><i class="fas fa-chevron-left"></i></div>
+                <div id="row-trending" class="content-row"></div>
+                <div class="scroll-btn btn-right" onclick="scrollRow('row-trending', 1)"><i class="fas fa-chevron-right"></i></div>
+            </div>
+        </section>
 
-            <!-- Populares (Grid) -->
-            <section>
-                <h3 class="text-xl font-bold mb-6">Mais Populares</h3>
-                <div id="popular-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                    <!-- Cards de filmes serão injetados aqui -->
-                </div>
-            </section>
+        <!-- Fileira: Top Rated -->
+        <section class="row-container px-6 md:px-12">
+            <h3 class="text-lg md:text-2xl font-bold mb-2">Melhores Avaliados</h3>
+            <div class="relative">
+                <div class="scroll-btn btn-left" onclick="scrollRow('row-top', -1)"><i class="fas fa-chevron-left"></i></div>
+                <div id="row-top" class="content-row"></div>
+                <div class="scroll-btn btn-right" onclick="scrollRow('row-top', 1)"><i class="fas fa-chevron-right"></i></div>
+            </div>
+        </section>
 
-        </div>
     </main>
 
-    <footer class="p-10 text-center border-t border-slate-800 text-slate-500 text-sm">
-        <p class="mb-2">Dados fornecidos por <span class="text-blue-500 font-bold">TMDB</span></p>
-        <p>&copy; 2024 StreamVibe Entertainment.</p>
-    </footer>
+    <!-- Modal Detalhes -->
+    <div id="modal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-0 md:p-6 bg-black/95 backdrop-blur-sm">
+        <div id="modal-content" class="bg-zinc-900 w-full max-w-4xl md:rounded-xl overflow-hidden shadow-2xl relative border border-zinc-800 overflow-y-auto max-h-screen custom-scrollbar">
+            <button onclick="closeModals()" class="absolute top-4 right-4 z-50 bg-black/60 hover:bg-white hover:text-black p-2 rounded-full w-10 h-10 flex items-center justify-center">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Modal Perfil -->
+    <div id="profile-modal" class="fixed inset-0 z-[300] hidden flex items-center justify-center p-4 bg-black/95 backdrop-blur-lg">
+        <div class="bg-zinc-900 w-full max-w-xl rounded-2xl border border-zinc-800 p-8">
+            <h2 class="text-2xl font-black mb-6 gradient-text">CONFIGURAR PERFIL</h2>
+            <div class="space-y-6">
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-500 mb-2 block">Nome</label>
+                    <input type="text" id="profile-name-input" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg py-3 px-4 focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-500 mb-2 block">Avatar</label>
+                    <div id="avatar-grid" class="grid grid-cols-4 gap-3"></div>
+                </div>
+                <div class="flex gap-4 pt-4">
+                    <button onclick="saveProfile()" class="flex-1 bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-500">Salvar</button>
+                    <button onclick="closeModals()" class="px-8 py-3 rounded-xl font-bold bg-zinc-800 hover:bg-zinc-700">Sair</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         const API_KEY = '741fd22ccd6cebe13c498c8efc5c1576';
         const BASE_URL = 'https://api.themoviedb.org/3';
-        const IMG_URL = 'https://image.tmdb.org/t/p/original';
-        const POSTER_URL = 'https://image.tmdb.org/t/p/w500';
+        const IMG_URL = 'https://image.tmdb.org/t/p/w500';
+        const BACKDROP_URL = 'https://image.tmdb.org/t/p/original';
 
-        async function fetchMovies(endpoint) {
-            try {
-                const response = await fetch(`${BASE_URL}${endpoint}?api_key=${API_KEY}&language=pt-BR`);
-                const data = await response.json();
-                return data.results;
-            } catch (error) {
-                console.error("Erro ao buscar filmes:", error);
-                return [];
-            }
+        let currentType = 'movie'; 
+        let currentAvatar = "Felix";
+        let currentName = "Visitante";
+
+        // Elementos
+        const navbar = document.getElementById('navbar');
+        const modal = document.getElementById('modal');
+        const profileModal = document.getElementById('profile-modal');
+
+        function scrollRow(rowId, direction) {
+            const row = document.getElementById(rowId);
+            const scrollAmount = window.innerWidth * 0.8;
+            row.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
         }
 
-        function createMovieCard(movie, isHorizontal = false) {
-            const containerClass = isHorizontal ? "flex-none w-40 md:w-48 group cursor-pointer" : "group cursor-pointer";
-            const imgPath = movie.poster_path ? `${POSTER_URL}${movie.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Image';
-            
-            return `
-                <div class="${containerClass}">
-                    <div class="aspect-[2/3] bg-slate-800 rounded-xl overflow-hidden relative movie-card shadow-lg transition-all duration-300 hover:shadow-blue-500/20">
-                        <img src="${imgPath}" class="w-full h-full object-cover transition group-hover:scale-110 duration-500" alt="${movie.title}" loading="lazy">
-                        <div class="overlay absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent opacity-0 transition-opacity flex flex-col justify-end p-4">
-                            <div class="flex items-center gap-2 mb-2">
-                                <span class="bg-yellow-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded">IMDb ${movie.vote_average.toFixed(1)}</span>
-                            </div>
-                            <button class="bg-blue-600 text-white w-full py-2 rounded font-bold text-xs hover:bg-blue-500 transition">ASSISTIR</button>
+        async function fetchRows() {
+            // Populares
+            fetchData(`/trending/${currentType}/week`, 'row-popular');
+            // Em Alta
+            fetchData(`/${currentType}/${currentType === 'movie' ? 'now_playing' : 'on_the_air'}`, 'row-trending');
+            // Top Rated
+            fetchData(`/${currentType}/top_rated`, 'row-top');
+        }
+
+        async function fetchData(endpoint, rowId) {
+            try {
+                const response = await fetch(`${BASE_URL}${endpoint}?api_key=${API_KEY}&language=pt-BR&page=1`);
+                const data = await response.json();
+                if (rowId === 'row-popular' && data.results.length > 0) setHero(data.results[0]);
+                displayRow(data.results, rowId);
+            } catch (error) { console.error(error); }
+        }
+
+        function displayRow(items, rowId) {
+            const container = document.getElementById(rowId);
+            container.innerHTML = '';
+            items.forEach(item => {
+                if(!item.poster_path) return;
+                const card = document.createElement('div');
+                card.className = 'movie-card';
+                card.innerHTML = `
+                    <div class="relative aspect-[2/3] rounded-md overflow-hidden bg-zinc-800 shadow-md">
+                        <img src="${IMG_URL + item.poster_path}" class="w-full h-full object-cover" loading="lazy">
+                        <div class="card-info absolute inset-0 flex flex-col justify-end p-3">
+                            <p class="text-[10px] font-bold text-blue-400"><i class="fas fa-star"></i> ${item.vote_average.toFixed(1)}</p>
+                            <h4 class="text-xs font-bold line-clamp-1">${item.title || item.name}</h4>
                         </div>
                     </div>
-                    <p class="mt-3 text-sm font-semibold truncate group-hover:text-blue-400 transition">${movie.title || movie.name}</p>
-                    <p class="text-xs text-slate-500">${(movie.release_date || movie.first_air_date || '').substring(0,4)} • Filme</p>
-                </div>
-            `;
+                `;
+                card.onclick = () => showDetails(item.id);
+                container.appendChild(card);
+            });
         }
 
-        async function initApp() {
-            // 1. Carregar Hero (pega o primeiro das tendências)
-            const trending = await fetchMovies('/trending/all/day');
-            if (trending.length > 0) {
-                const heroMovie = trending[0];
-                const heroSection = document.getElementById('hero-section');
-                const heroContent = document.getElementById('hero-content');
+        function setHero(item) {
+            document.getElementById('hero-title').innerText = item.title || item.name;
+            document.getElementById('hero-desc').innerText = item.overview || "Assista agora no MIXCINE.";
+            document.getElementById('hero-banner').style.backgroundImage = `linear-gradient(to right, rgba(20, 20, 20, 0.95) 10%, rgba(20, 20, 20, 0.3) 50%, transparent), url(${BACKDROP_URL + item.backdrop_path})`;
+        }
+
+        async function showDetails(id) {
+            try {
+                const res = await fetch(`${BASE_URL}/${currentType}/${id}?api_key=${API_KEY}&language=pt-BR`);
+                const data = await res.json();
+                const backdrop = data.backdrop_path ? BACKDROP_URL + data.backdrop_path : '';
                 
-                heroSection.style.backgroundImage = `url('${IMG_URL}${heroMovie.backdrop_path}')`;
-                document.getElementById('hero-title').innerText = heroMovie.title || heroMovie.name;
-                document.getElementById('hero-overview').innerText = heroMovie.overview;
-                heroContent.classList.remove('opacity-0');
-            }
-
-            // 2. Carregar Linha de Tendências
-            const trendingRow = document.getElementById('trending-row');
-            trendingRow.innerHTML = '';
-            trending.slice(1, 12).forEach(movie => {
-                trendingRow.innerHTML += createMovieCard(movie, true);
-            });
-
-            // 3. Carregar Grid de Populares
-            const popular = await fetchMovies('/movie/popular');
-            const popularGrid = document.getElementById('popular-grid');
-            popularGrid.innerHTML = '';
-            popular.forEach(movie => {
-                popularGrid.innerHTML += createMovieCard(movie);
-            });
+                document.getElementById('modal-body').innerHTML = `
+                    <div class="relative h-[40vh] md:h-[60vh] bg-cover bg-center" style="background-image: url('${backdrop}')">
+                        <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/20 to-transparent"></div>
+                        <div class="absolute bottom-0 p-6 md:p-10 w-full">
+                             <h2 class="text-3xl md:text-5xl font-black mb-4">${data.title || data.name}</h2>
+                             <div class="flex gap-4">
+                                <button class="bg-white text-black px-8 py-2 rounded font-bold hover:bg-blue-500 hover:text-white transition-all">Assistir</button>
+                                <button class="w-10 h-10 rounded-full border border-white/50 flex items-center justify-center hover:border-white"><i class="fas fa-plus"></i></button>
+                             </div>
+                        </div>
+                    </div>
+                    <div class="p-6 md:p-10 bg-zinc-900">
+                        <div class="flex items-center gap-4 mb-4 text-sm font-bold">
+                            <span class="text-green-400">${Math.round(data.vote_average * 10)}% relevante</span>
+                            <span class="text-slate-500">${(data.release_date || data.first_air_date || '').split('-')[0]}</span>
+                            <span class="border border-zinc-700 px-1.5 text-[10px]">ULTRA HD</span>
+                        </div>
+                        <p class="text-slate-300 text-lg leading-relaxed">${data.overview || "Sem sinopse disponível."}</p>
+                    </div>
+                `;
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } catch (e) { console.error(e); }
         }
 
-        // Iniciar
-        window.onload = initApp;
+        function initProfile() {
+            currentName = localStorage.getItem('mixcine_name') || "Visitante";
+            currentAvatar = localStorage.getItem('mixcine_avatar') || "Felix";
+            updateProfileUI();
+        }
+
+        function updateProfileUI() {
+            document.getElementById('nav-profile-name').innerText = currentName;
+            document.getElementById('nav-profile-img').src = `https://api.dicebear.com/7.x/adventurer/svg?seed=${currentAvatar}`;
+            document.getElementById('profile-name-input').value = currentName;
+        }
+
+        function openProfileModal() {
+            const seeds = ["Felix", "Aria", "Leo", "Luna", "Milo", "Maya", "Oscar", "Zoe", "Jasper", "Cleo", "Hugo", "Ivy"];
+            const grid = document.getElementById('avatar-grid');
+            grid.innerHTML = '';
+            seeds.forEach(s => {
+                const d = document.createElement('div');
+                d.className = `cursor-pointer p-1 rounded-lg border-2 transition-all ${s === currentAvatar ? 'border-blue-500 bg-blue-500/10' : 'border-transparent bg-zinc-800'}`;
+                d.innerHTML = `<img src="https://api.dicebear.com/7.x/adventurer/svg?seed=${s}" class="w-full">`;
+                d.onclick = () => {
+                    currentAvatar = s;
+                    openProfileModal(); 
+                };
+                grid.appendChild(d);
+            });
+            profileModal.classList.remove('hidden');
+        }
+
+        function saveProfile() {
+            currentName = document.getElementById('profile-name-input').value.trim() || "Visitante";
+            localStorage.setItem('mixcine_name', currentName);
+            localStorage.setItem('mixcine_avatar', currentAvatar);
+            updateProfileUI();
+            closeModals();
+        }
+
+        function closeModals() {
+            modal.classList.add('hidden');
+            profileModal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function changeType(type) {
+            currentType = type;
+            
+            // Atualiza UI da Bottom Nav
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            if(type === 'movie') document.getElementById('btn-movies').classList.add('active');
+            if(type === 'tv') document.getElementById('btn-series').classList.add('active');
+
+            fetchRows();
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        window.addEventListener('scroll', () => {
+            window.scrollY > 50 ? navbar.classList.add('nav-scrolled') : navbar.classList.remove('nav-scrolled');
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initProfile();
+            fetchRows();
+        });
+
+        window.onclick = (e) => { 
+            if (e.target == modal || e.target == profileModal) closeModals(); 
+        };
     </script>
 </body>
 </html>
