@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MixCine Premium - TMDB</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0A0A0C;
+            --surface: #16161A;
+            --divider: rgba(255, 255, 255, 0.08);
+            --primary-blue: #00AFFE;
+            --primary-glow: rgba(0, 175, 254, 0.3);
+            --text-main: #FFFFFF;
+            --text-secondary: #A0A0AB;
+            --android-drawer-bg: #121116;
+            --android-header-bg: #202020;
+            --android-drawer-width: 260px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body, html { height: 100%; background-color: var(--bg-dark); color: var(--text-main); overflow: hidden; }
+
+        /* --- DRAWER ANDROID --- */
+        #android-drawer {
+            position: fixed; top: 0; left: calc(-1 * var(--android-drawer-width));
+            width: var(--android-drawer-width); height: 100%;
+            background-color: var(--android-drawer-bg); z-index: 2000;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto; border-right: 1px solid #222;
+        }
+        #android-drawer.active { transform: translateX(var(--android-drawer-width)); }
+        .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 1999; backdrop-filter: blur(4px); }
+
+        .linear25 { background-color: var(--android-header-bg); padding: 40px 15px 20px 15px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .profile-img { width: 85px; height: 85px; border-radius: 50%; border: 3px solid #008DCD; object-fit: cover; margin-bottom: 12px; }
+        .nome-text { font-size: 18px; color: #fff; font-weight: 600; }
+        .plano-box { display: flex; align-items: center; gap: 5px; margin-bottom: 15px; }
+        .linear26 { background-color: #000; padding: 8px 16px; display: flex; align-items: center; gap: 8px; cursor: pointer; border-radius: 20px; transition: 0.2s; border: 1px solid #333; }
+        .linear26:active { transform: scale(0.95); }
+
+        .drawer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 20px 10px; }
+        .grid-item { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px 5px; cursor: pointer; transition: 0.2s; border-radius: 8px; }
+        .grid-item:active { background: rgba(255,255,255,0.05); }
+        .grid-item i { font-size: 20px; color: #fff; margin-bottom: 6px; }
+        .grid-item span { font-size: 11px; color: var(--text-secondary); text-align: center; font-weight: 500; }
+
+        /* --- TOOLBAR --- */
+        .toolbar { height: 64px; background: rgba(10, 10, 12, 0.85); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--divider); }
+        .img-logo { height: 26px; width: auto; }
+
+        /* --- CONTENT --- */
+        .content-scroll { height: calc(100vh - 139px); overflow-y: auto; scrollbar-width: none; }
+        .content-scroll::-webkit-scrollbar { display: none; }
+
+        .swiper { width: 100%; height: 500px; }
+        .swiper-slide { background-position: center; background-size: cover; display: flex; align-items: flex-end; padding: 0 24px 80px 24px; position: relative; }
+        .slide-gradient { position: absolute; inset: 0; background: linear-gradient(to top, var(--bg-dark) 5%, transparent 50%, rgba(0,0,0,0.3) 100%); }
+        .slide-info { position: relative; z-index: 2; max-width: 90%; }
+        .slide-title { font-family: 'Montserrat', sans-serif; font-size: 34px; font-weight: 900; line-height: 1; margin-bottom: 12px; text-shadow: 0 4px 12px rgba(0,0,0,0.8); }
+        .meta-tag { display: inline-block; padding: 4px 10px; background: rgba(255,255,255,0.12); backdrop-filter: blur(8px); border-radius: 4px; font-size: 11px; font-weight: 700; margin-right: 6px; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); }
+
+        /* --- CARDS (5px Border Radius) --- */
+        .movie-card { 
+            min-width: 130px; 
+            height: 195px; 
+            border-radius: 5px; 
+            background-color: var(--surface); 
+            background-size: cover; 
+            background-position: center;
+            flex-shrink: 0; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5); 
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        .movie-card:active { transform: scale(0.95); }
+        
+        /* --- FAB --- */
+        .fab { position: fixed; right: 20px; bottom: 95px; width: 56px; height: 56px; background: #FFF; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 90; box-shadow: 0 6px 20px rgba(0,0,0,0.4); cursor: pointer; transition: 0.3s; }
+        .fab:active { transform: scale(0.9); }
+        .fab img { width: 28px; }
+        
+        /* --- NAV BOT --- */
+        .nav_bot_wizer { display: flex; width: 100%; height: 75px; background: rgba(13, 13, 15, 0.98); backdrop-filter: blur(30px); position: fixed; bottom: 0; border-top: 1px solid var(--divider); z-index: 1000; }
+        .nav-item-android { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; cursor: pointer; }
+        .indicator-line { width: 0%; height: 3px; background: var(--primary-blue); position: absolute; top: 0; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 0 0 2px 2px; }
+        .nav-item-android.active .indicator-line { width: 40%; box-shadow: 0 2px 10px var(--primary-glow); }
+        .nav-item-android span { font-size: 10px; font-weight: 800; text-transform: uppercase; opacity: 0; transform: translateY(10px); transition: 0.3s; position: absolute; color: var(--primary-blue); letter-spacing: 0.5px; }
+        .nav-item-android.active span { opacity: 1; transform: translateY(12px); }
+        .custom-icon { width: 24px; height: 24px; transition: 0.3s ease; filter: grayscale(1) opacity(0.5); }
+        .nav-item-android.active .custom-icon { transform: translateY(-12px); opacity: 0; }
+
+        /* --- SEARCH --- */
+        #search_bar { position: absolute; top: 0; left: 0; width: 100%; height: 64px; background: var(--bg-dark); display: none; align-items: center; padding: 0 16px; z-index: 110; border-bottom: 1px solid var(--divider); }
+        
+        /* Skeleton */
+        .skeleton { background: linear-gradient(90deg, #1c1c21 25%, #25252b 50%, #1c1c21 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 5px; }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        /* Search Results Overlay */
+        #search_results_container {
+            position: fixed; top: 64px; left: 0; width: 100%; height: calc(100% - 64px);
+            background: var(--bg-dark); z-index: 105; padding: 20px; display: none;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="drawer-overlay" id="overlay"></div>
+    
+    <nav id="android-drawer">
+        <div class="linear25">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Shadow" alt="Perfil" class="profile-img">
+            <div class="nome-text">Shadow Monarch</div>
+            <div class="plano-box">
+                <span style="font-size: 11px; color: #888; letter-spacing: 1px;">PLANO</span>
+                <span style="font-size: 11px; color: #00AFFE; font-weight: 900;">VIP</span>
+            </div>
+            <div class="linear26">
+                <i class="fa-solid fa-user-gear" style="color: #fff; font-size: 12px;"></i>
+                <span style="font-size: 13px; font-weight: 600;">Gerenciar Perfil</span>
+            </div>
+        </div>
+
+        <div class="drawer-grid">
+            <div class="grid-item" onclick="showPage('Início')"><i class="fa-solid fa-house"></i><span>Início</span></div>
+            <div class="grid-item" onclick="showPage('Filmes')"><i class="fa-solid fa-film"></i><span>Filmes</span></div>
+            <div class="grid-item" onclick="showPage('Séries')"><i class="fa-solid fa-tv"></i><span>Séries</span></div>
+            <div class="grid-item" onclick="showPage('Novelas')"><i class="fa-solid fa-masks-theater"></i><span>Novelas</span></div>
+            <div class="grid-item" onclick="showPage('Animes')"><i class="fa-solid fa-ghost"></i><span>Animes</span></div>
+            <div class="grid-item" onclick="showPage('Token')"><i class="fa-solid fa-key"></i><span>Token</span></div>
+            <div class="grid-item" onclick="showPage('Lista')"><i class="fa-solid fa-bookmark"></i><span>Minha Lista</span></div>
+            <div class="grid-item" onclick="showPage('Downloads')"><i class="fa-solid fa-download"></i><span>Offline</span></div>
+            <div class="grid-item" onclick="confirmExit()"><i class="fa-solid fa-power-off text-red-500"></i><span class="text-red-500">Sair</span></div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <!-- Search Bar -->
+        <div id="search_bar">
+            <div class="cursor-pointer p-2" id="btn_close_search"><i data-lucide="arrow-left"></i></div>
+            <input type="text" id="input_query" class="w-full bg-transparent border-none text-white px-4 py-2 outline-none text-lg" placeholder="Procurar filmes, séries...">
+            <div class="cursor-pointer p-2" id="clear_search"><i data-lucide="x" class="w-5"></i></div>
+        </div>
+
+        <!-- Search Results Overlay -->
+        <div id="search_results_container">
+            <h2 class="text-xl font-bold mb-6">Resultados</h2>
+            <div class="grid grid-cols-2 gap-4" id="search_grid"></div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="cursor-pointer p-2" onclick="toggleDrawer()"><i data-lucide="menu"></i></div>
+            <img src="https://i.ibb.co/W45Cc5zz/logo-oficial.png" alt="MixCine" class="img-logo">
+            <div class="cursor-pointer p-2" id="btn_open_search"><i data-lucide="search"></i></div>
+        </div>
+
+        <div class="content-scroll" id="content_scroll">
+            <!-- Hero Slider -->
+            <div class="swiper mySwiper">
+                <div class="swiper-wrapper" id="slider_container">
+                    <div class="swiper-slide skeleton"></div>
+                </div>
+            </div>
+
+            <!-- Sections -->
+            <div class="section-container pb-20">
+                <div class="px-4 py-6 flex justify-between items-center">
+                    <span class="text-lg font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-fire-flame-curved text-orange-500 text-sm"></i> Tendências
+                    </span>
+                    <span class="text-xs font-black text-blue-400 tracking-wider">VER TUDO</span>
+                </div>
+                <div class="flex overflow-x-auto px-4 gap-4 no-scrollbar" id="trending_movies">
+                    <div class="movie-card skeleton"></div>
+                    <div class="movie-card skeleton"></div>
+                    <div class="movie-card skeleton"></div>
+                </div>
+
+                <div class="px-4 py-6 mt-4 flex justify-between items-center">
+                    <span class="text-lg font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-star text-yellow-400 text-sm"></i> Séries Populares
+                    </span>
+                    <span class="text-xs font-black text-blue-400 tracking-wider">VER TUDO</span>
+                </div>
+                <div class="flex overflow-x-auto px-4 gap-4 no-scrollbar" id="trending_series">
+                    <div class="movie-card skeleton"></div>
+                    <div class="movie-card skeleton"></div>
+                    <div class="movie-card skeleton"></div>
+                </div>
+
+                <div class="px-4 py-6 mt-4 flex justify-between items-center">
+                    <span class="text-lg font-bold">Adicionados Recentemente</span>
+                    <span class="text-xs font-black text-blue-400 tracking-wider">VER TUDO</span>
+                </div>
+                <div class="flex overflow-x-auto px-4 gap-4 no-scrollbar" id="recent_added">
+                    <div class="movie-card skeleton"></div>
+                    <div class="movie-card skeleton"></div>
+                    <div class="movie-card skeleton"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Action Button -->
+        <div class="fab">
+            <img src="https://i.ibb.co/Ndxvd7b3/ic-wing-black.png" alt="Wing">
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="nav_bot_wizer">
+            <div class="nav-item-android active" onclick="selectNav(this, 'home')">
+                <div class="indicator-line"></div>
+                <img src="https://i.ibb.co/Vp0vFz48/ic-display-home.png" class="custom-icon">
+                <span>Início</span>
+            </div>
+            <div class="nav-item-android" onclick="selectNav(this, 'movies')">
+                <div class="indicator-line"></div>
+                <img src="https://i.ibb.co/WpfWhcss/ic-live-tv-2.png" class="custom-icon">
+                <span>Filmes</span>
+            </div>
+            <div class="nav-item-android" onclick="selectNav(this, 'series')">
+                <div class="indicator-line"></div>
+                <img src="https://i.ibb.co/Y4Ns1jFy/ic-series-tv.png" class="custom-icon">
+                <span>Séries</span>
+            </div>
+            <div class="nav-item-android" onclick="selectNav(this, 'animes')">
+                <div class="indicator-line"></div>
+                <img src="https://i.ibb.co/prsLtkT8/ic-display-animes.png" class="custom-icon">
+                <span>Animes</span>
+            </div>
+            <div class="nav-item-android" onclick="selectNav(this, 'soon')">
+                <div class="indicator-line"></div>
+                <img src="https://i.ibb.co/TD269C25/ic-display-tv.png" class="custom-icon">
+                <span>Breve</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+        const TMDB_KEY = '741fd22ccd6cebe13c498c8efc5c1576';
+        const BASE_URL = 'https://api.themoviedb.org/3';
+        const IMG_BACKDROP = 'https://image.tmdb.org/t/p/original';
+        const IMG_POSTER = 'https://image.tmdb.org/t/p/w500';
+
+        lucide.createIcons();
+
+        // UI Handlers
+        function toggleDrawer() {
+            const drw = document.getElementById('android-drawer');
+            const ovl = document.getElementById('overlay');
+            const isActive = drw.classList.toggle('active');
+            ovl.style.display = isActive ? 'block' : 'none';
+        }
+
+        document.getElementById('overlay').onclick = toggleDrawer;
+
+        function selectNav(element, type) {
+            document.querySelectorAll('.nav-item-android').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+            if (navigator.vibrate) navigator.vibrate(12);
+            // Aqui você poderia carregar conteúdos específicos por categoria
+        }
+
+        // Search Handlers
+        const searchBar = document.getElementById('search_bar');
+        const searchResults = document.getElementById('search_results_container');
+        const searchInput = document.getElementById('input_query');
+        const searchGrid = document.getElementById('search_grid');
+
+        document.getElementById('btn_open_search').onclick = () => {
+            searchBar.style.display = 'flex';
+            searchInput.focus();
+        };
+
+        document.getElementById('btn_close_search').onclick = () => {
+            searchBar.style.display = 'none';
+            searchResults.style.display = 'none';
+            searchInput.value = '';
+        };
+
+        document.getElementById('clear_search').onclick = () => {
+            searchInput.value = '';
+            searchGrid.innerHTML = '';
+            searchResults.style.display = 'none';
+        };
+
+        searchInput.oninput = debounce(async (e) => {
+            const query = e.target.value.trim();
+            if (query.length < 3) {
+                searchResults.style.display = 'none';
+                return;
+            }
+
+            searchResults.style.display = 'block';
+            searchGrid.innerHTML = '<div class="skeleton h-40 w-full"></div>'.repeat(4);
+
+            try {
+                const res = await fetch(`${BASE_URL}/search/multi?api_key=${TMDB_KEY}&language=pt-BR&query=${encodeURIComponent(query)}`);
+                const data = await res.json();
+                renderSearch(data.results);
+            } catch (err) {
+                console.error(err);
+            }
+        }, 500);
+
+        function debounce(func, timeout = 300) {
+            let timer;
+            return (...args) => {
+                clearTimeout(timer);
+                timer = setTimeout(() => { func.apply(this, args); }, timeout);
+            };
+        }
+
+        function renderSearch(items) {
+            const valid = items.filter(i => i.poster_path);
+            if (valid.length === 0) {
+                searchGrid.innerHTML = '<p class="col-span-2 text-center text-gray-500 py-10">Nenhum resultado encontrado.</p>';
+                return;
+            }
+            searchGrid.innerHTML = valid.map(item => `
+                <div class="flex flex-col gap-2">
+                    <div class="movie-card w-full h-64" style="background-image: url('${IMG_POSTER + item.poster_path}')"></div>
+                    <span class="text-xs font-bold truncate">${item.title || item.name}</span>
+                </div>
+            `).join('');
+        }
+
+        // Content Loaders
+        async function fetchContent() {
+            try {
+                const [trends, movies, series, top] = await Promise.all([
+                    fetch(`${BASE_URL}/trending/all/week?api_key=${TMDB_KEY}&language=pt-BR`).then(r => r.json()),
+                    fetch(`${BASE_URL}/movie/popular?api_key=${TMDB_KEY}&language=pt-BR`).then(r => r.json()),
+                    fetch(`${BASE_URL}/tv/popular?api_key=${TMDB_KEY}&language=pt-BR`).then(r => r.json()),
+                    fetch(`${BASE_URL}/movie/top_rated?api_key=${TMDB_KEY}&language=pt-BR`).then(r => r.json())
+                ]);
+
+                renderSlider(trends.results.slice(0, 8));
+                renderList(movies.results, 'trending_movies');
+                renderList(series.results, 'trending_series');
+                renderList(top.results, 'recent_added');
+
+                new Swiper(".mySwiper", { 
+                    loop: true, 
+                    effect: 'fade',
+                    fadeEffect: { crossFade: true },
+                    autoplay: { delay: 5000, disableOnInteraction: false },
+                    speed: 800
+                });
+            } catch (e) { 
+                console.error("Erro ao carregar dados do TMDB:", e); 
+            }
+        }
+
+        function renderSlider(items) {
+            document.getElementById('slider_container').innerHTML = items.map(item => {
+                const year = (item.release_date || item.first_air_date || '').split('-')[0];
+                return `
+                <div class="swiper-slide" style="background-image: url('${IMG_BACKDROP + item.backdrop_path}')">
+                    <div class="slide-gradient"></div>
+                    <div class="slide-info">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="meta-tag" style="background: #E50914; border:none;">POPULAR</span>
+                            ${year ? `<span class="meta-tag">${year}</span>` : ''}
+                            <span class="meta-tag text-yellow-400">★ ${item.vote_average.toFixed(1)}</span>
+                        </div>
+                        <div class="slide-title">${item.title || item.name}</div>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function renderList(items, containerId) {
+            document.getElementById(containerId).innerHTML = items.map(item => `
+                <div class="movie-card" style="background-image: url('${IMG_POSTER + item.poster_path}')">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                </div>
+            `).join('');
+        }
+
+        function showPage(p) { 
+            toggleDrawer(); 
+            console.log("Navegando para:", p); 
+        }
+
+        function confirmExit() { 
+            if(confirm("Deseja realmente sair do aplicativo?")) location.reload(); 
+        }
+
+        window.onload = fetchContent;
+    </script>
+</body>
+</html>
